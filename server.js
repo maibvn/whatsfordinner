@@ -33,7 +33,7 @@ async function makeHuggingFaceRequest(prompt, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(
-        `Attempt ${attempt} of ${maxRetries} to call Hugging Face API (model: Mistral-7B-Instruct)...`
+        `Attempt ${attempt} of ${maxRetries} to call Hugging Face API...`
       );
       const response = await fetch(
         "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
@@ -80,6 +80,65 @@ async function makeHuggingFaceRequest(prompt, maxRetries = 3) {
   }
 }
 
+// Add this new function at the top with other imports/functions
+async function generateRecipeImage(recipeName, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(
+        `Generating image for recipe: ${recipeName} (Attempt ${attempt}/${maxRetries})`
+      );
+
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+          },
+          body: JSON.stringify({
+            inputs: `High quality photo of Vietnamese dish ${recipeName}, professional food photography, appetizing presentation, clear lighting, restaurant quality plating`,
+            parameters: {
+              negative_prompt: "text, watermark, low quality, blurry",
+              num_inference_steps: 30,
+              guidance_scale: 7.5,
+              width: 768,
+              height: 512,
+            },
+          }),
+        }
+      );
+
+      console.log("Stable Diffusion API response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Image generation failed: ${response.statusText}. Details: ${errorText}`
+        );
+      }
+
+      const imageBuffer = await response.buffer();
+      const base64Image = `data:image/jpeg;base64,${imageBuffer.toString(
+        "base64"
+      )}`;
+      console.log("Successfully generated image");
+      return base64Image;
+    } catch (error) {
+      console.error(
+        `Image generation attempt ${attempt} failed:`,
+        error.message
+      );
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      console.log(`Waiting 5 seconds before retry ${attempt + 1}...`);
+      await delay(5000);
+    }
+  }
+  return null;
+}
+
 // API endpoint for getting dish suggestions
 app.post("/api/suggest-dish", async (req, res) => {
   try {
@@ -111,12 +170,25 @@ Requirements:
 - Must use the provided ingredients: ${ingredients}
 - Response must be valid JSON [/INST]`;
 
-    // Make the API call with retries
     const data = await makeHuggingFaceRequest(prompt);
-
-    // Parse the generated text into structured format
     const generatedText = data[0].generated_text;
     const suggestion = await parseRecipe(generatedText);
+
+    // Add debugging logs
+    console.log("Recipe name for image generation:", suggestion.name);
+
+    try {
+      console.log("Starting image generation...");
+      const recipeImage = await generateRecipeImage(suggestion.name);
+      console.log("Image generation completed:", !!recipeImage);
+
+      if (recipeImage) {
+        suggestion.image = recipeImage;
+        console.log("Image attached to suggestion object");
+      }
+    } catch (imageError) {
+      console.error("Detailed image generation error:", imageError);
+    }
 
     res.json(suggestion);
   } catch (error) {

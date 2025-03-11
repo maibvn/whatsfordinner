@@ -21,14 +21,8 @@
 1. Create a `.env` file in the root directory with:
 
 ```env
-HUGGINGFACE_API_KEY=your_api_key_here
 PORT=3000
 ```
-
-### API Keys
-
-- Hugging Face API key required
-- Get your API key from: https://huggingface.co/settings/tokens
 
 ### Installation
 
@@ -140,7 +134,6 @@ Note:
 ## Security
 
 - CORS configuration
-- API key protection
 - Input sanitization
 - Rate limiting consideration
 

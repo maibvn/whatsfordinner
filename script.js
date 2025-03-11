@@ -41,10 +41,81 @@ async function handleGetSuggestion() {
     }
 
     const data = await response.json();
-    console.log("Received suggestion:", data);
+
+    console.log("Received recipe data:", data);
+
+    // Clear previous content
+    recipeName.textContent = "";
+    recipeIngredients.innerHTML = "";
+    recipeInstructions.textContent = "";
+
+    // Make suggestion element visible first
+    suggestionElement.style.display = "block";
 
     // Update the UI with the recipe
     recipeName.textContent = data.name || "Recipe Name Not Available";
+
+    // Handle the image
+    if (data.image) {
+      console.log("Image data received");
+
+      // Part 1: Handle body background
+      const handleContainerBackground = () => {
+        const body = document.body;
+        const imageUrl = `url("${data.image}")`;
+        body.style.setProperty("background-image", imageUrl, "important");
+        body.style.setProperty("background-size", "cover", "important");
+        body.style.setProperty("background-position", "center", "important");
+        body.style.setProperty("background-repeat", "no-repeat", "important");
+        body.style.setProperty("background-attachment", "fixed", "important");
+      };
+
+      // Part 2: Handle recipe image in content
+      const handleRecipeImage = () => {
+        const existingImage = document.querySelector(".recipe-image-container");
+        if (existingImage) {
+          existingImage.remove();
+        }
+
+        const imageContainer = document.createElement("div");
+        imageContainer.className = "recipe-image-container";
+
+        const recipeImage = document.createElement("img");
+        recipeImage.src = data.image;
+        recipeImage.alt = data.name;
+        recipeImage.className = "recipe-image";
+
+        imageContainer.appendChild(recipeImage);
+        const recipeCard = document.querySelector(".recipe-card");
+        recipeCard.insertBefore(
+          imageContainer,
+          document.querySelector(".recipe-section")
+        );
+      };
+
+      // Load image first, then apply both handlers
+      const tempImage = new Image();
+      tempImage.onload = () => {
+        console.log("Image loaded successfully");
+        handleContainerBackground();
+        handleRecipeImage();
+      };
+      tempImage.onerror = (e) => {
+        console.error("Error loading image:", e);
+      };
+      tempImage.src = data.image;
+    } else {
+      // Handle case when no image is received
+      const container = document.querySelector(".container");
+      container.style.setProperty("background-image", "none", "important");
+      container.classList.remove("container-with-image");
+
+      // Remove recipe image if exists
+      const existingImage = document.querySelector(".recipe-image-container");
+      if (existingImage) {
+        existingImage.remove();
+      }
+    }
 
     // Clear previous ingredients
     recipeIngredients.innerHTML = "";
@@ -80,8 +151,6 @@ async function handleGetSuggestion() {
         .filter((item) => item !== "");
     }
 
-    console.log("Parsed ingredients list:", ingredientsList);
-
     // Create grid items for each ingredient
     if (ingredientsList && ingredientsList.length > 0) {
       ingredientsList.forEach((ingredient) => {
@@ -109,10 +178,9 @@ async function handleGetSuggestion() {
     recipeInstructions.textContent = instructionsList.join("\n");
 
     // Show the suggestion and scroll to it
-    suggestionElement.style.display = "block";
     suggestionElement.scrollIntoView({ behavior: "smooth" });
   } catch (error) {
-    console.error("Error details:", error);
+    console.error("Error:", error);
     alert(`Error: ${error.message}`);
   } finally {
     loadingElement.style.display = "none";
