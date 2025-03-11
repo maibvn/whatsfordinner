@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's for Dinner?</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>What's for Dinner?</h1>
+            <p class="subtitle">Find Vietnamese dishes you can make with your available ingredients</p>
+            
+            <!-- Temporarily hidden model selection
+            <div class="model-selection">
+                <p>Select AI Model:</p>
+                <div class="model-buttons">
+                    <button class="model-btn active" data-model="facebook/opt-350m">OPT-350M</button>
+                    <button class="model-btn" data-model="gpt2">GPT-2</button>
+                    <button class="model-btn" data-model="facebook/opt-1.3b">OPT-1.3B</button>
+                    <button class="model-btn" data-model="facebook/opt-2.7b">OPT-2.7B</button>
+                </div>
+            </div>
+            -->
+        </header>
+
+        <main>
+            <div class="input-section">
+                <h2>What ingredients do you have?</h2>
+                <textarea 
+                    id="ingredientsInput" 
+                    placeholder="List your available ingredients... (e.g., rice, eggs, vegetables)"
+                    rows="3"
+                ></textarea>
+                <button id="getSuggestion">Get Dish Suggestion</button>
+            </div>
+
+            <div class="result" id="result">
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Finding a dish you can make...</p>
+                </div>
+                <div id="suggestion" class="suggestion-container" style="display: none;">
+                    <h2>Suggested Recipe</h2>
+                    <div class="recipe-card">
+                        <h3 id="recipeName" class="recipe-name"></h3>
+                        <div class="recipe-section">
+                            <h4>Ingredients</h4>
+                            <div class="ingredients-grid" id="recipeIngredients"></div>
+                        </div>
+                        <div class="recipe-section">
+                            <h4>Instructions</h4>
+                            <p id="recipeInstructions" class="recipe-instructions"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by AI to help you cook Vietnamese dishes</p>
+        </footer>
+    </div>
+    <script type="module" src="script.js"></script>
+</body>
+</html> 
